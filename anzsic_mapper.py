@@ -103,6 +103,37 @@ class BusinessAnzsicLocator:
                 return {"error": "No business found at this address."}
                 
             place = data["places"][0]
+
+            # SMART RETRY LOGIC:
+            # If the result is a generic address (no specific business type), 
+            # try again with "business at ..." to find the actual POI.
+            primary_type = place.get("primaryType")
+            generic_types = {"street_address", "subpremise", "premise", "route", "postal_code", "locality", "political"}
+            
+            is_generic = (primary_type is None) or (primary_type in generic_types)
+            
+            if is_generic:
+                print(f"Generic address result detected ({primary_type}). Retrying with 'business at {address}'...")
+                try:
+                    retry_payload = {
+                        "textQuery": f"business at {address}",
+                        "maxResultCount": 1
+                    }
+                    retry_resp = requests.post(self.base_url, headers=headers, json=retry_payload, timeout=5)
+                    if retry_resp.status_code == 200:
+                        retry_data = retry_resp.json()
+                        if retry_data.get("places"):
+                            new_place = retry_data["places"][0]
+                            new_p_type = new_place.get("primaryType")
+                            # If the new result is NOT generic, swap it in!
+                            if new_p_type and new_p_type not in generic_types:
+                                print(f"Retry successful! Found: {new_place.get('displayName', {}).get('text')} ({new_p_type})")
+                                place = new_place
+                            else:
+                                print("Retry result was also generic.")
+                except Exception as retry_err:
+                    print(f"Retry query failed (non-blocking): {str(retry_err)}")
+
             return self._enrich_with_anzsic(place)
             
         except requests.exceptions.RequestException as e:
