@@ -154,7 +154,8 @@ class BusinessAnzsicLocator:
                     "radius": 50.0 # 50 meters
                 }
             },
-            "maxResultCount": 5
+            "maxResultCount": 20,
+            "rankPreference": "DISTANCE"
         }
         
         try:

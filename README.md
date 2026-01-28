@@ -250,7 +250,16 @@ For issues and questions:
 
 ## Changelog
 
-### Version 1.1.0 (Current)
+### Version 1.2.0 (Current)
+- **New Feature**: "Deep In-Building Search" - Fetches up to 20 businesses per location using advanced distance ranking, ensuring complete coverage of shopping centers and office blocks.
+- **Architecture**: Complete rewrite of the frontend into a robust **Single Page Application (SPA)**.
+- **UI/UX**: Implemented **Web Interface Guidelines** including:
+    - Instant "Back" navigation (no API-re-fetch).
+    - Stateful views (Search / List / Details).
+    - Accessible focus states and semantic typography.
+- **Visuals**: Premium "Inter" font, loading states, and result counters.
+
+### Version 1.1.0
 - **New Feature**: "Nearby Business Search" - Handles generic address searches (e.g., "123 Main St") by automatically searching for businesses within a 50m radius.
 - **UI Update**: New selection list interface for when multiple businesses are found at the same location.
 - **Fix**: Improved error handling for port conflicts on macOS.
