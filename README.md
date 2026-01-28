@@ -5,6 +5,7 @@ A web application that automatically identifies businesses and recommends ANZSIC
 ## Features
 
 - **Address-based Classification**: Enter any business address to get its ANZSIC classification
+- **Nearby Business Search**: Automatically detects businesses at generic addresses (addresses without a specific business name) and finds relevant businesses nearby (New)
 - **Google Places Integration**: Leverages Google Places API (New) for accurate business identification
 - **70+ Business Type Mappings**: Comprehensive mapping of Google Place types to ANZSIC codes
 - **Demo Mode**: Test the application without an API key using mock data
@@ -248,6 +249,11 @@ For issues and questions:
 - UI components styled with Tailwind CSS
 
 ## Changelog
+
+### Version 1.1.0 (Current)
+- **New Feature**: "Nearby Business Search" - Handles generic address searches (e.g., "123 Main St") by automatically searching for businesses within a 50m radius.
+- **UI Update**: New selection list interface for when multiple businesses are found at the same location.
+- **Fix**: Improved error handling for port conflicts on macOS.
 
 ### Version 1.0.0
 - Initial release
