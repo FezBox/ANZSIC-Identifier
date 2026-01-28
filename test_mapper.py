@@ -25,11 +25,15 @@ class TestAnzsicMapper(unittest.TestCase):
         mock_post.return_value = mock_response
 
         # Run the locator
-        result = self.locator.get_business_details("123 Test St")
+        response = self.locator.get_business_details("123 Test St")
 
         # Verify API was called
         mock_post.assert_called_once()
-        
+
+        # Verify response structure
+        self.assertEqual(response["status"], "single")
+        result = response["result"]
+
         # Verify Mapped Output
         self.assertEqual(result["source_intelligence"]["detected_type"], "cafe")
         self.assertEqual(result["recommended_classification"]["code"], "4511")
@@ -51,9 +55,11 @@ class TestAnzsicMapper(unittest.TestCase):
         }
         mock_post.return_value = mock_response
 
-        result = self.locator.get_business_details("456 Fit Way")
+        response = self.locator.get_business_details("456 Fit Way")
+        self.assertEqual(response["status"], "single")
+        result = response["result"]
         self.assertEqual(result["recommended_classification"]["code"], "9111")
-        self.assertEqual(result["recommended_classification"]["title"], "Health and Fitness Centres and Sports Centres")
+        self.assertEqual(result["recommended_classification"]["title"], "Health and Fitness Centres and Gymnasia Operation")
 
     @patch('requests.post')
     def test_no_results(self, mock_post):

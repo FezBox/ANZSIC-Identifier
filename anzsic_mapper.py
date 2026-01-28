@@ -1,9 +1,14 @@
 import requests
 import json
 import os
+import logging
+from typing import Dict, List, Optional, Any
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 class BusinessAnzsicLocator:
-    def __init__(self, google_api_key, gemini_api_key=None):
+    def __init__(self, google_api_key: Optional[str], gemini_api_key: Optional[str] = None):
         self.api_key = google_api_key
         self.gemini_api_key = gemini_api_key
         self.base_url = "https://places.googleapis.com/v1/places:searchText"
@@ -21,11 +26,11 @@ class BusinessAnzsicLocator:
             if os.path.exists(json_path):
                 with open(json_path, "r") as f:
                     self.anzsic_codes = json.load(f)
-                print(f"Loaded {len(self.anzsic_codes)} ANZSIC codes from database.")
+                logger.info(f"Loaded {len(self.anzsic_codes)} ANZSIC codes from database.")
             else:
-                print("WARNING: anzsic_codes.json not found. Keyword matching will be limited.")
+                logger.warning("anzsic_codes.json not found. Keyword matching will be limited.")
         except Exception as e:
-            print(f"Error loading ANZSIC JSON: {e}")
+            logger.error(f"Error loading ANZSIC JSON: {e}")
 
         # Mapping of Google Place Types to ANZSIC Codes (Fast Tier 1)
         self.anzsic_map = {
@@ -33,7 +38,7 @@ class BusinessAnzsicLocator:
             "cafe": {"code": "4511", "title": "Cafes and Restaurants"},
             "restaurant": {"code": "4511", "title": "Cafes and Restaurants"},
             "bar": {"code": "4520", "title": "Pubs, Taverns and Bars"},
-            "bakery": {"code": "1172", "title": "Bakery Product Manufacturing (Non-factory based)"},
+            "bakery": {"code": "1174", "title": "Bakery Product Manufacturing (Non-factory based)"},
             "meal_takeaway": {"code": "4512", "title": "Takeaway Food Services"},
             
             # Retail
@@ -58,7 +63,7 @@ class BusinessAnzsicLocator:
             "lawyer": {"code": "6931", "title": "Legal Services"},
             "accounting": {"code": "6932", "title": "Accounting Services"},
             "bank": {"code": "6221", "title": "Banking"},
-            "gym": {"code": "9111", "title": "Health and Fitness Centres and Gymnasia"},
+            "gym": {"code": "9111", "title": "Health and Fitness Centres and Gymnasia Operation"},
             "laundry": {"code": "9531", "title": "Laundry and Dry-Cleaning Services"},
             
             # Health
@@ -73,23 +78,23 @@ class BusinessAnzsicLocator:
             "lodging": {"code": "4400", "title": "Accommodation"},
             
             # Automotive
-            "car_dealer": {"code": "3911", "title": "Car Retailing (New)"},
+            "car_dealer": {"code": "3911", "title": "Car Retailing"},
             "car_rental": {"code": "6611", "title": "Passenger Car Rental and Hiring"},
             "car_repair": {"code": "9419", "title": "Other Automotive Repair and Maintenance"},
             "gas_station": {"code": "4000", "title": "Fuel Retailing"},
             
             # Education
-            "school": {"code": "8023", "title": "Primary Education"}, # Simplified
+            "school": {"code": "8021", "title": "Primary Education"},
             "university": {"code": "8102", "title": "Higher Education"},
             
             # Other
             "library": {"code": "6010", "title": "Libraries and Archives"},
             "post_office": {"code": "5101", "title": "Postal Services"},
-            "police": {"code": "7712", "title": "Police Services"},
+            "police": {"code": "7711", "title": "Police Services"},
             "fire_station": {"code": "7713", "title": "Fire Protection and Other Emergency Services"}
         }
 
-    def _batch_ai_classification(self, candidates):
+    def _batch_ai_classification(self, candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Sends a single batch request to Gemini to classify multiple businesses.
         Includes Caching to minimize API calls.
@@ -104,7 +109,7 @@ class BusinessAnzsicLocator:
         for c in candidates:
             cache_key = f"{c['name']}|{c['address']}"
             if cache_key in self.ai_cache:
-                print(f"Cache hit for: {c['name']}")
+                logger.debug(f"Cache hit for: {c['name']}")
                 batch_results[c['name']] = self.ai_cache[cache_key]
             else:
                 to_process.append(c)
@@ -175,87 +180,23 @@ class BusinessAnzsicLocator:
                                 break
                                 
                 except (KeyError, IndexError, json.JSONDecodeError) as e:
-                    print(f"Batch Parsing Failed: {e}")
-                    print(f"Raw: {text}")
+                    logger.error(f"Batch Parsing Failed: {e}")
+                    logger.debug(f"Raw: {text}")
             else:
-                print(f"AI Batch Error: {response.status_code} - {response.text}")
+                logger.error(f"AI Batch Error: {response.status_code} - {response.text}")
         except Exception as e:
-             print(f"Batch Request Failed: {e}")
+             logger.error(f"Batch Request Failed: {e}")
              
         return batch_results
 
-
-        # Mapping of Google Place Types to ANZSIC Codes (Fast Tier 1)
-        self.anzsic_map = {
-            # Food & Beverage
-            "restaurant": {"code": "4511", "title": "Cafes and Restaurants"},
-            "cafe": {"code": "4511", "title": "Cafes and Restaurants"},
-            "coffee_shop": {"code": "4511", "title": "Cafes and Restaurants"},
-            "fast_food_restaurant": {"code": "4512", "title": "Takeaway Food Services"},
-            "bar": {"code": "4520", "title": "Pubs, Taverns and Bars"},
-            "liquor_store": {"code": "4123", "title": "Liquor Retailing"},
-            "bakery": {"code": "1172", "title": "Bakery Product Manufacturing (Non-factory based)"}, # Or Retail
-            
-            # Retail
-            "supermarket": {"code": "4110", "title": "Supermarket and Grocery Stores"},
-            "grocery_store": {"code": "4110", "title": "Supermarket and Grocery Stores"},
-            "convenience_store": {"code": "4110", "title": "Supermarket and Grocery Stores"},
-            "clothing_store": {"code": "4251", "title": "Clothing Retailing"},
-            "shoe_store": {"code": "4252", "title": "Footwear Retailing"},
-            "electronics_store": {"code": "4221", "title": "Electrical, Electronic and Gas Appliance Retailing"},
-            "furniture_store": {"code": "4211", "title": "Furniture Retailing"},
-            "hardware_store": {"code": "4231", "title": "Hardware and Building Supplies Retailing"},
-            "pharmacy": {"code": "4271", "title": "Pharmaceutical, Cosmetic and Toiletry Goods Retailing"},
-            "drugstore": {"code": "4271", "title": "Pharmaceutical, Cosmetic and Toiletry Goods Retailing"},
-            "florist": {"code": "4274", "title": "Flower Retailing"},
-            
-            # Services
-            "bank": {"code": "6221", "title": "Banking"},
-            "atm": {"code": "6221", "title": "Banking"},
-            "accounting": {"code": "6932", "title": "Accounting Services"},
-            "lawyer": {"code": "6931", "title": "Legal Services"},
-            "real_estate_agency": {"code": "6720", "title": "Real Estate Services"},
-            "travel_agency": {"code": "7220", "title": "Travel Agency and Tour Arrangement Services"},
-            "hair_care": {"code": "9511", "title": "Hairdressing and Beauty Services"},
-            "gym": {"code": "9111", "title": "Health and Fitness Centres and Sports Centres"},
-            "laundry": {"code": "9531", "title": "Laundry and Dry-Cleaning Services"},
-            
-            # Health
-            "doctor": {"code": "8511", "title": "General Practice Medical Services"},
-            "dentist": {"code": "8531", "title": "Dental Services"},
-            "hospital": {"code": "8401", "title": "Hospitals (Except Psychiatric Hospitals)"},
-            "veterinary_care": {"code": "6970", "title": "Veterinary Services"},
-            
-            # Accommodation
-            "hotel": {"code": "4400", "title": "Accommodation"},
-            "motel": {"code": "4400", "title": "Accommodation"},
-            "lodging": {"code": "4400", "title": "Accommodation"},
-            
-            # Automotive
-            "car_dealer": {"code": "3911", "title": "Car Retailing (New)"},
-            "car_rental": {"code": "6611", "title": "Passenger Car Rental and Hiring"},
-            "car_repair": {"code": "9419", "title": "Other Automotive Repair and Maintenance"},
-            "gas_station": {"code": "4000", "title": "Fuel Retailing"},
-            
-            # Education
-            "school": {"code": "8023", "title": "Primary Education"}, # Simplified
-            "university": {"code": "8102", "title": "Higher Education"},
-            
-            # Other
-            "library": {"code": "6010", "title": "Libraries and Archives"},
-            "post_office": {"code": "5101", "title": "Postal Services"},
-            "police": {"code": "7712", "title": "Police Services"},
-            "fire_station": {"code": "7713", "title": "Fire Protection and Other Emergency Services"}
-        }
-
-    def get_business_details(self, address):
+    def get_business_details(self, address: str) -> Dict[str, Any]:
         """
         Queries Google Places API to find the business at the address.
         """
         # DEMO MODE CHECK
         # If no valid key is provided, we return mock data so the user can test the UI.
         if not self.api_key or self.api_key == "your_api_key_here":
-            print("WARNING: No valid API Key found. Using DEMO/MOCK mode.")
+            logger.warning("No valid API Key found. Using DEMO/MOCK mode.")
             return self._get_mock_response(address)
 
         headers = {
@@ -289,7 +230,7 @@ class BusinessAnzsicLocator:
             candidates = []
             
             if is_generic and "location" in place:
-                print(f"Generic address result detected ({primary_type}). Searching nearby...")
+                logger.info(f"Generic address result detected ({primary_type}). Searching nearby...")
                 lat = place["location"]["latitude"]
                 lng = place["location"]["longitude"]
                 candidates = self._search_nearby(lat, lng)
@@ -311,7 +252,7 @@ class BusinessAnzsicLocator:
                 
                 # 3. Batch AI Classification (One HTTP Call + Caching)
                 if ai_candidates:
-                    print(f"Batch processing {len(ai_candidates)} businesses via AI...")
+                    logger.info(f"Batch processing {len(ai_candidates)} businesses via AI...")
                     ai_results = self._batch_ai_classification(ai_candidates)
                     
                     # 4. Merge results
@@ -411,7 +352,7 @@ class BusinessAnzsicLocator:
         except Exception as e:
             return {"error": f"An error occurred: {str(e)}"}
 
-    def _search_nearby(self, lat, lng):
+    def _search_nearby(self, lat: float, lng: float) -> List[Dict[str, Any]]:
         """
         Searches for businesses within a small radius of the coordinate.
         """
@@ -452,11 +393,11 @@ class BusinessAnzsicLocator:
                         
                 return valid_places
         except Exception as e:
-            print(f"Nearby search failed: {e}")
+            logger.error(f"Nearby search failed: {e}")
             
         return []
 
-    def _get_mock_response(self, address):
+    def _get_mock_response(self, address: str) -> Dict[str, Any]:
         """
         Returns a mock response for testing purposes based on keywords in the address.
         """
@@ -486,7 +427,7 @@ class BusinessAnzsicLocator:
         result["source_intelligence"]["business_name"] += " (MOCK DATA)"
         return result
 
-    def _enrich_deterministic(self, place_data):
+    def _enrich_deterministic(self, place_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Maps the Google Place data to a recommended ANZSIC code using Tiers 1 & 2 only (No AI).
         """
@@ -551,7 +492,7 @@ class BusinessAnzsicLocator:
             "ai_classification": None # Default to None, filled later if needed
         }
 
-    def _batch_ai_classification(self, candidates):
+    def _batch_ai_classification(self, candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Sends a single batch request to Gemini to classify multiple businesses.
         """
@@ -601,11 +542,11 @@ class BusinessAnzsicLocator:
                     batch_results = json.loads(clean_text)
                     return batch_results
                 except (KeyError, IndexError, json.JSONDecodeError) as e:
-                    print(f"Batch Parsing Failed: {e}")
-                    print(f"Raw: {text}")
+                    logger.error(f"Batch Parsing Failed: {e}")
+                    logger.debug(f"Raw: {text}")
             else:
-                print(f"AI Batch Error: {response.status_code} - {response.text}")
+                logger.error(f"AI Batch Error: {response.status_code} - {response.text}")
         except Exception as e:
-             print(f"Batch Request Failed: {e}")
+             logger.error(f"Batch Request Failed: {e}")
              
         return {}
