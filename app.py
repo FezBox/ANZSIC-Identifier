@@ -8,9 +8,10 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Initialize the locator with the API key
-api_key = os.getenv("GOOGLE_API_KEY")
-locator = BusinessAnzsicLocator(api_key)
+# Initialize the locator with the API keys
+google_api_key = os.getenv("GOOGLE_API_KEY")
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+locator = BusinessAnzsicLocator(google_api_key, gemini_api_key)
 
 @app.route('/')
 def index():
@@ -32,7 +33,7 @@ def identify_business():
         
     address = data['address']
     
-    if not api_key:
+    if not google_api_key:
         return jsonify({"error": "Server configuration error: Google API Key missing"}), 500
 
     result = locator.get_business_details(address)

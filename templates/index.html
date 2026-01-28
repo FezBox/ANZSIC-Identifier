@@ -208,11 +208,11 @@
                     </div>
                 </div>
 
-                <!-- classification Card -->
+                <!-- classification Card: OFFICIAL -->
                 <div class="bg-white rounded-2xl shadow-lg border-2 border-green-500 overflow-hidden relative group">
                     <div
                         class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-sm">
-                        RECOMMENDED</div>
+                        OFFICIAL / VERIFIED</div>
                     <div class="p-8 h-full flex flex-col justify-center items-center text-center space-y-3">
                         <p class="text-sm text-gray-400 font-bold uppercase tracking-widest">ANZSIC Code</p>
                         <h2 id="detail-anzsic-code"
@@ -220,6 +220,31 @@
                         </h2>
                         <div class="w-16 h-1 bg-green-100 rounded-full my-2"></div>
                         <p id="detail-anzsic-title" class="text-xl font-semibold text-gray-800 text-balance"></p>
+                    </div>
+                </div>
+
+                <!-- classification Card: AI PREDICTION -->
+                <div id="card-ai-prediction"
+                    class="hidden bg-white rounded-2xl shadow-lg border-2 border-indigo-500 overflow-hidden relative group">
+                    <div
+                        class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-sm flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                            <path
+                                d="M12 6a1 1 0 0 0-1 1v4.59l-3.29-3.3a1 1 0 0 0-1.42 1.42l5 5a1 1 0 0 0 1.42 0l5-5a1 1 0 0 0-1.42-1.42L13 11.59V7a1 1 0 0 0-1-1z" />
+                        </svg>
+                        AI RECOMMENDATION
+                    </div>
+                    <div class="p-8 h-full flex flex-col justify-center items-center text-center space-y-2">
+                        <p class="text-sm text-indigo-400 font-bold uppercase tracking-widest">Predicted Code</p>
+                        <h2 id="detail-ai-code"
+                            class="text-6xl font-black text-gray-900 tracking-tighter tabular-nums text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-800">
+                        </h2>
+                        <div class="w-16 h-1 bg-indigo-100 rounded-full my-2"></div>
+                        <!-- Valid Title (e.g. Internet Publishing) -->
+                        <p id="detail-ai-title" class="text-xl font-bold text-gray-900 text-balance"></p>
+                        <!-- Static Label -->
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">AI Classified Industry</p>
                     </div>
                 </div>
             </div>
@@ -412,13 +437,38 @@
         function selectBusiness(item) {
             state.selectedBusiness = item;
 
-            // Populate Details
+            // Populate Source
             elements.detailName.textContent = item.source_intelligence.business_name;
             elements.detailType.textContent = item.source_intelligence.detected_type.replace(/_/g, ' ');
             elements.detailAddress.textContent = item.source_intelligence.address;
 
+            // Populate Official ANZSIC (Green)
             elements.detailCode.textContent = item.recommended_classification.code;
             elements.detailTitle.textContent = item.recommended_classification.title;
+
+            // Populate AI Recommendation (Blue)
+            const aiCard = document.getElementById('card-ai-prediction');
+            const aiCode = document.getElementById('detail-ai-code');
+            const aiTitle = document.getElementById('detail-ai-title');
+
+            // Logic: Show AI card if we have a result OR if the official result is Unknown (so we see the "empty" AI state)
+            const isOfficialUnknown = !item.recommended_classification.code || item.recommended_classification.code === 'Unknown';
+            const hasAIResult = !!item.ai_classification;
+
+            if (hasAIResult) {
+                aiCode.textContent = item.ai_classification.code;
+                aiTitle.textContent = item.ai_classification.title;
+                aiCard.classList.remove('hidden');
+            } else if (isOfficialUnknown) {
+                // Official is unknown, but AI also failed (e.g. Rate Limit)
+                // Show card with "Unavailable" state
+                aiCode.textContent = "---";
+                aiTitle.textContent = "Service Unavailable (Rate Limit)";
+                aiCard.classList.remove('hidden');
+            } else {
+                // Official is known (e.g. McDonalds), so we hide AI suggestion to reduce clutter
+                aiCard.classList.add('hidden');
+            }
 
             elements.detailJson.textContent = JSON.stringify(item, null, 2);
 

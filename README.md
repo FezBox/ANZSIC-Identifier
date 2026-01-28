@@ -250,7 +250,16 @@ For issues and questions:
 
 ## Changelog
 
-### Version 1.2.0 (Current)
+### Version 2.0.0 (Major Release)
+- **Official ANZSIC 2006 Dataset**: Upgraded internal database from ~70 mappings to the **Full Official ANZSIC 2006 Standard** (506 unique codes).
+- **Hybrid AI Classification**:
+    - **Dual Card UI**: Clearly separates "Verified/Official" matches from "AI Recommendations".
+    - **Official Title Lookup**: AI predicts the code, but the system cross-references the official database to provide the *legal* industry title (e.g. `6310` -> "Internet Service Providers"), eliminating hallucinations.
+- **Smart Caching**: Implemented in-memory caching for zero-latency lookups on repeated searches.
+- **Batch AI Processing**: Optimizes API usage by batching multiple candidates into a single LLM call.
+- **Performance**: Reduced API calls significantly through caching and batching strategies.
+
+### Version 1.2.0
 - **New Feature**: "Deep In-Building Search" - Fetches up to 20 businesses per location using advanced distance ranking, ensuring complete coverage of shopping centers and office blocks.
 - **Architecture**: Complete rewrite of the frontend into a robust **Single Page Application (SPA)**.
 - **UI/UX**: Implemented **Web Interface Guidelines** including:
