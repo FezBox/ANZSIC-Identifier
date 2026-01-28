@@ -19,9 +19,9 @@ The application is deployed on Vercel and includes a demo mode for testing witho
 
 ## Technology Stack
 
-- **Backend**: Python 3.x, Flask
+- **Backend**: Python 3.x, Flask, Flask-Talisman, Flask-Limiter
 - **Frontend**: HTML5, Tailwind CSS, Vanilla JavaScript
-- **APIs**: Google Places API (New)
+- **APIs**: Google Places API (New), Gemini AI
 - **Deployment**: Vercel (serverless)
 - **Testing**: Python unittest
 
@@ -175,11 +175,15 @@ The application can be deployed to any platform supporting Python/Flask:
 ANZSIC Identifier/
 ├── app.py                 # Flask application entry point
 ├── anzsic_mapper.py       # Core business logic and ANZSIC mapping
-├── requirements.txt       # Python dependencies
+├── requirements.txt       # Python dependencies (pinned versions)
 ├── vercel.json           # Vercel deployment configuration
 ├── .env.example          # Environment variable template
 ├── .env                  # Environment variables (not in git)
 ├── test_mapper.py        # Unit tests
+├── data/
+│   └── anzsic_codes.json # Full ANZSIC 2006 dataset with hierarchy
+├── scripts/
+│   └── update_anzsic_from_abs.py  # ABS data update utility
 └── templates/
     ├── index.html        # Main application interface
     └── visualizer.html   # Data flow visualizer
@@ -249,6 +253,22 @@ For issues and questions:
 - UI components styled with Tailwind CSS
 
 ## Changelog
+
+### Version 2.1.1
+- **Fix**: Resolved Vercel `FUNCTION_INVOCATION_FAILED` crash caused by `logging.FileHandler` writing to a read-only serverless filesystem. Logs now stream to stdout only (captured by Vercel automatically).
+
+### Version 2.1.0
+- **Security**: Flask-Talisman integration for Content Security Policy (CSP) headers.
+- **Security**: Flask-Limiter for API rate limiting (200/hr global, 10/min on `/api/identify`).
+- **Security**: Input validation and sanitization with regex pattern checking and XSS prevention.
+- **Logging**: Structured `logging` module replaces all `print()` statements across app and mapper.
+- **Data**: Enriched all ANZSIC codes with full hierarchy metadata (division, subdivision, group).
+- **Data**: Corrected ANZSIC codes for bakery (1174), school (8021), police (7711) and updated titles to match official ABS terminology.
+- **Code Quality**: Added Python type hints across all public methods in `anzsic_mapper.py`.
+- **Code Quality**: Removed duplicate `anzsic_map` block, pinned all dependency versions.
+- **Code Quality**: Updated tests for new response wrapper structure (`status`/`result`).
+- **Tooling**: Added ABS data update script (`scripts/update_anzsic_from_abs.py`).
+- **Infra**: Configurable debug mode and port via environment variables, host binding to `0.0.0.0`.
 
 ### Version 2.0.0 (Major Release)
 - **Official ANZSIC 2006 Dataset**: Upgraded internal database from ~70 mappings to the **Full Official ANZSIC 2006 Standard** (506 unique codes).
