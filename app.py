@@ -12,12 +12,11 @@ from html import escape
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
+# Configure logging (StreamHandler only — Vercel has a read-only filesystem)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
         logging.StreamHandler()
     ]
 )
