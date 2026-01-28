@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ANZSIC Identifier Data Flow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #111827;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="text-white font-sans">
+
+    <div class="absolute top-0 left-0 p-6 z-10">
+        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">System
+            Visualizer</h1>
+        <p class="text-gray-400 text-sm">Real-time data flow simulation</p>
+        <a href="/"
+            class="inline-block mt-4 text-xs font-semibold uppercase tracking-wider text-blue-400 hover:text-white border border-blue-400 hover:bg-blue-600 hover:border-transparent px-4 py-2 rounded transition-all">
+            &larr; Back to Tool
+        </a>
+    </div>
+
+    <canvas id="flowCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('flowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Resize Canvas
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Nodes
+        const nodes = [
+            { id: 'user', label: 'User Input', xPct: 0.15, yPct: 0.5, color: '#60A5FA' },  // Blue
+            { id: 'api', label: 'Google API', xPct: 0.5, yPct: 0.5, color: '#F87171' },    // Red
+            { id: 'db', label: 'ANZSIC DB', xPct: 0.85, yPct: 0.5, color: '#34D399' }     // Green
+        ];
+
+        // Packets (Data flowing between nodes)
+        let packets = [];
+
+        class Packet {
+            constructor(startNode, endNode, color) {
+                this.startNode = startNode;
+                this.endNode = endNode;
+                this.progress = 0;
+                this.speed = 0.015;
+                this.color = color;
+                this.radius = 4;
+            }
+
+            update() {
+                this.progress += this.speed;
+                return this.progress >= 1;
+            }
+
+            draw(ctx, nodes) {
+                const start = nodes.find(n => n.id === this.startNode);
+                const end = nodes.find(n => n.id === this.endNode);
+
+                const sx = start.xPct * canvas.width;
+                const sy = start.yPct * canvas.height;
+                const ex = end.xPct * canvas.width;
+                const ey = end.yPct * canvas.height;
+
+                const x = sx + (ex - sx) * this.progress;
+                const y = sy + (ey - sy) * this.progress;
+
+                ctx.beginPath();
+                ctx.arc(x, y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+
+                // Trail effect
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.3;
+                ctx.beginPath();
+                ctx.arc(x - (ex - sx) * 0.02, y - (ey - sy) * 0.02, this.radius * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Animation Loop
+        function animate() {
+            // Clear screen
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Connection Lines
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const userNode = nodes[0]; // 0.15
+            const apiNode = nodes[1];  // 0.5
+            const dbNode = nodes[2];   // 0.85
+
+            // Line User -> API
+            ctx.moveTo(userNode.xPct * canvas.width, userNode.yPct * canvas.height);
+            ctx.lineTo(apiNode.xPct * canvas.width, apiNode.yPct * canvas.height);
+
+            // Line API -> DB
+            ctx.moveTo(apiNode.xPct * canvas.width, apiNode.yPct * canvas.height);
+            ctx.lineTo(dbNode.xPct * canvas.width, dbNode.yPct * canvas.height);
+            ctx.stroke();
+
+            // Draw Nodes
+            nodes.forEach(node => {
+                const x = node.xPct * canvas.width;
+                const y = node.yPct * canvas.height;
+
+                // Glow
+                const grad = ctx.createRadialGradient(x, y, 10, x, y, 60);
+                grad.addColorStop(0, node.color + '44'); // Transparent
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, 60, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Circle
+                ctx.fillStyle = '#1F2937';
+                ctx.strokeStyle = node.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Label
+                ctx.fillStyle = 'white';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.label, x, y + 50);
+
+                // Icon (Simple letters)
+                ctx.fillStyle = node.color;
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node.id.toUpperCase(), x, y);
+                ctx.textBaseline = 'alphabetic'; // Reset
+            });
+
+            // Handle Packets
+            if (Math.random() < 0.02) { // Spawn rate
+                packets.push(new Packet('user', 'api', '#60A5FA'));
+            }
+
+            for (let i = packets.length - 1; i >= 0; i--) {
+                const p = packets[i];
+                const finished = p.update();
+                p.draw(ctx, nodes);
+
+                if (finished) {
+                    if (p.endNode === 'api') {
+                        // Spawn response packet to DB
+                        packets.push(new Packet('api', 'db', '#34D399'));
+                        // Maybe spawn a response back to user eventually?
+                        // Let's keep it linear flow for now as per diagram description
+                    }
+                    packets.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+    </script>
+</body>
+
+</html>
