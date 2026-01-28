@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,61 +10,90 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen text-gray-800">
 
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">A</div>
-                <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">ANZSIC Identifier</h1>
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">A
+                </div>
+                <h1
+                    class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                    ANZSIC Identifier</h1>
             </div>
-            <a href="/visualizer" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">Visualizer Demo &rarr;</a>
+            <a href="/visualizer"
+                class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">Visualizer Demo
+                &rarr;</a>
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
+
         <div class="text-center mb-10">
             <h2 class="text-3xl font-bold text-gray-900 mb-3">Classify Business by Address</h2>
-            <p class="text-gray-500">Enter an address to discover its business type and recommended ANZSIC classification.</p>
+            <p class="text-gray-500">Enter an address to discover its business type and recommended ANZSIC
+                classification.</p>
         </div>
 
         <!-- Search Box -->
-        <div class="bg-white rounded-2xl shadow-xl p-2 mb-12 border border-gray-100 transform transition-all hover:shadow-2xl">
+        <div
+            class="bg-white rounded-2xl shadow-xl p-2 mb-12 border border-gray-100 transform transition-all hover:shadow-2xl">
             <form id="searchForm" class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="addressInput" 
+                <input type="text" id="addressInput"
                     class="flex-1 px-6 py-4 rounded-xl text-lg border-2 border-transparent focus:border-blue-500 focus:outline-none bg-gray-50 transition-colors"
                     placeholder="E.g., 123 George St, Sydney" required>
-                <button type="submit" 
+                <button type="submit"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2">
                     <span id="btnText">Identify</span>
-                    <svg id="btnSpinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg id="btnSpinner" class="animate-spin h-5 w-5 text-white hidden"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
                     </svg>
                 </button>
             </form>
         </div>
 
         <!-- Error Message -->
-        <div id="errorMessage" class="hidden bg-red-50 text-red-600 p-4 rounded-xl mb-8 border border-red-100 flex items-center gap-3">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div id="errorMessage"
+            class="hidden bg-red-50 text-red-600 p-4 rounded-xl mb-8 border border-red-100 flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
             <span id="errorText"></span>
         </div>
 
         <!-- Results Section -->
+        <!-- Multiple Candidates Selection -->
+        <div id="candidatesArea" class="hidden mb-12">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Multiple businesses found nearby</h3>
+            <p class="text-gray-500 mb-6">The address you entered is close to several businesses. Please select one:</p>
+            <div id="candidatesList" class="grid grid-cols-1 gap-3">
+                <!-- Candidate buttons injected here -->
+            </div>
+        </div>
+
+        <!-- Results Section -->
         <div id="resultsArea" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             <!-- Source Intelligence -->
             <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="font-semibold text-gray-700">Source Intelligence</h3>
-                    <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">GOOGLE PLACES</span>
+                    <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">GOOGLE
+                        PLACES</span>
                 </div>
                 <div class="p-6 space-y-4">
                     <div>
@@ -75,7 +105,8 @@
                         <p id="resType" class="text-lg font-medium text-gray-900 capitalize"></p>
                     </div>
                     <div>
-                        <p class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-1">Formatted Address</p>
+                        <p class="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-1">Formatted Address
+                        </p>
                         <p id="resAddress" class="text-sm text-gray-600"></p>
                     </div>
                 </div>
@@ -83,7 +114,8 @@
 
             <!-- ANZSIC Classification -->
             <div class="bg-white rounded-2xl shadow-lg border-2 border-green-500 overflow-hidden relative">
-                <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">RECOMMENDED</div>
+                <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                    RECOMMENDED</div>
                 <div class="p-6 h-full flex flex-col justify-center items-center text-center space-y-2">
                     <p class="text-sm text-gray-500 font-medium uppercase tracking-wider">ANZSIC Code</p>
                     <h2 id="anzsicCode" class="text-5xl font-extrabold text-green-600 tracking-tight"></h2>
@@ -96,7 +128,9 @@
         <!-- Raw Data Toggle -->
         <div id="rawDataArea" class="hidden mt-8 text-center">
             <details class="text-left bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <summary class="cursor-pointer text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none">View Raw API Response</summary>
+                <summary
+                    class="cursor-pointer text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none">View
+                    Raw API Response</summary>
                 <pre id="rawJson" class="mt-4 text-xs overflow-auto max-h-48 text-gray-600 font-mono"></pre>
             </details>
         </div>
@@ -109,6 +143,8 @@
         const btnText = document.getElementById('btnText');
         const btnSpinner = document.getElementById('btnSpinner');
         const resultsArea = document.getElementById('resultsArea');
+        const candidatesArea = document.getElementById('candidatesArea');
+        const candidatesList = document.getElementById('candidatesList');
         const errorArea = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         const rawDataArea = document.getElementById('rawDataArea');
@@ -116,12 +152,13 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const address = input.value.trim();
-            if(!address) return;
+            if (!address) return;
 
             // UI Loading State
             btnText.textContent = 'Searching...';
             btnSpinner.classList.remove('hidden');
             resultsArea.classList.add('hidden');
+            candidatesArea.classList.add('hidden');
             errorArea.classList.add('hidden');
             rawDataArea.classList.add('hidden');
             input.disabled = true;
@@ -139,19 +176,19 @@
                     throw new Error(data.error || 'Failed to fetch data');
                 }
 
-                // Populate Data
-                document.getElementById('resName').textContent = data.source_intelligence.business_name;
-                document.getElementById('resType').textContent = data.source_intelligence.detected_type.replace(/_/g, ' ');
-                document.getElementById('resAddress').textContent = data.source_intelligence.address;
-                
-                document.getElementById('anzsicCode').textContent = data.recommended_classification.code;
-                document.getElementById('anzsicTitle').textContent = data.recommended_classification.title;
-                
+                // Show Raw Data
                 document.getElementById('rawJson').textContent = JSON.stringify(data, null, 2);
-
-                // Show Results
-                resultsArea.classList.remove('hidden');
                 rawDataArea.classList.remove('hidden');
+
+                // Handle Response Types
+                if (data.status === 'multiple') {
+                    showCandidates(data.candidates);
+                } else if (data.status === 'single') {
+                    displayResult(data.result);
+                } else {
+                    // Fallback for flat structure or legacy
+                    displayResult(data);
+                }
 
             } catch (err) {
                 console.error(err);
@@ -164,6 +201,44 @@
                 input.disabled = false;
             }
         });
+
+        function showCandidates(candidates) {
+            candidatesList.innerHTML = '';
+            candidates.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'flex items-center justify-between w-full p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left group';
+                btn.innerHTML = `
+                    <div>
+                        <div class="font-bold text-gray-900 group-hover:text-blue-600">${c.source_intelligence.business_name}</div>
+                        <div class="text-sm text-gray-500">${c.source_intelligence.detected_type.replace(/_/g, ' ')}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-mono text-sm font-bold text-green-600">${c.recommended_classification.code}</div>
+                        <div class="text-xs text-gray-400">Select &rarr;</div>
+                    </div>
+                `;
+                btn.onclick = () => {
+                    displayResult(c);
+                    candidatesArea.classList.add('hidden');
+                };
+                candidatesList.appendChild(btn);
+            });
+            candidatesArea.classList.remove('hidden');
+        }
+
+        function displayResult(data) {
+            // Populate Data
+            document.getElementById('resName').textContent = data.source_intelligence.business_name;
+            document.getElementById('resType').textContent = data.source_intelligence.detected_type.replace(/_/g, ' ');
+            document.getElementById('resAddress').textContent = data.source_intelligence.address;
+
+            document.getElementById('anzsicCode').textContent = data.recommended_classification.code;
+            document.getElementById('anzsicTitle').textContent = data.recommended_classification.title;
+
+            // Show Results
+            resultsArea.classList.remove('hidden');
+        }
     </script>
 </body>
+
 </html>

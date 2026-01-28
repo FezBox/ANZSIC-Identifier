@@ -6,6 +6,7 @@ class BusinessAnzsicLocator:
     def __init__(self, google_api_key):
         self.api_key = google_api_key
         self.base_url = "https://places.googleapis.com/v1/places:searchText"
+        self.nearby_url = "https://places.googleapis.com/v1/places:searchNearby"
         
         # Mapping of Google Place Types to ANZSIC Codes
         # This is a representative list and can be expanded.
@@ -84,8 +85,8 @@ class BusinessAnzsicLocator:
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Requesting display name, primary type, multiple types, and formatted address
-            "X-Goog-FieldMask": "places.displayName,places.primaryType,places.types,places.formattedAddress"
+            # Requesting display name, primary type, multiple types, address AND location
+            "X-Goog-FieldMask": "places.displayName,places.primaryType,places.types,places.formattedAddress,places.location"
         }
         
         payload = {
@@ -104,42 +105,78 @@ class BusinessAnzsicLocator:
                 
             place = data["places"][0]
 
-            # SMART RETRY LOGIC:
-            # If the result is a generic address (no specific business type), 
-            # try again with "business at ..." to find the actual POI.
+            # CHECK FOR GENERIC ADDRESS
             primary_type = place.get("primaryType")
             generic_types = {"street_address", "subpremise", "premise", "route", "postal_code", "locality", "political"}
-            
             is_generic = (primary_type is None) or (primary_type in generic_types)
             
-            if is_generic:
-                print(f"Generic address result detected ({primary_type}). Retrying with 'business at {address}'...")
-                try:
-                    retry_payload = {
-                        "textQuery": f"business at {address}",
-                        "maxResultCount": 1
-                    }
-                    retry_resp = requests.post(self.base_url, headers=headers, json=retry_payload, timeout=5)
-                    if retry_resp.status_code == 200:
-                        retry_data = retry_resp.json()
-                        if retry_data.get("places"):
-                            new_place = retry_data["places"][0]
-                            new_p_type = new_place.get("primaryType")
-                            # If the new result is NOT generic, swap it in!
-                            if new_p_type and new_p_type not in generic_types:
-                                print(f"Retry successful! Found: {new_place.get('displayName', {}).get('text')} ({new_p_type})")
-                                place = new_place
-                            else:
-                                print("Retry result was also generic.")
-                except Exception as retry_err:
-                    print(f"Retry query failed (non-blocking): {str(retry_err)}")
+            candidates = []
+            
+            if is_generic and "location" in place:
+                print(f"Generic address result detected ({primary_type}). Searching nearby...")
+                lat = place["location"]["latitude"]
+                lng = place["location"]["longitude"]
+                candidates = self._search_nearby(lat, lng)
 
-            return self._enrich_with_anzsic(place)
+            if candidates:
+                # If we found nearby candidates, return them as a list
+                return {
+                    "status": "multiple",
+                    "candidates": [self._enrich_with_anzsic(c) for c in candidates]
+                }
+            else:
+                # Standard single result (enriched)
+                result = self._enrich_with_anzsic(place)
+                return {"status": "single", "result": result}
             
         except requests.exceptions.RequestException as e:
             return {"error": f"API Request Failed: {str(e)}"}
         except Exception as e:
             return {"error": f"An error occurred: {str(e)}"}
+
+    def _search_nearby(self, lat, lng):
+        """
+        Searches for businesses within a small radius of the coordinate.
+        """
+        headers = {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": self.api_key,
+            "X-Goog-FieldMask": "places.displayName,places.primaryType,places.types,places.formattedAddress"
+        }
+        
+        payload = {
+            "locationRestriction": {
+                "circle": {
+                    "center": {
+                        "latitude": lat,
+                        "longitude": lng
+                    },
+                    "radius": 50.0 # 50 meters
+                }
+            },
+            "maxResultCount": 5
+        }
+        
+        try:
+            response = requests.post(self.nearby_url, headers=headers, json=payload, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                places = data.get("places", [])
+                
+                # Filter out generic places from the nearby results
+                valid_places = []
+                generic_types = {"street_address", "subpremise", "premise", "route", "postal_code", "locality", "political"}
+                
+                for p in places:
+                    p_type = p.get("primaryType")
+                    if p_type and p_type not in generic_types:
+                        valid_places.append(p)
+                        
+                return valid_places
+        except Exception as e:
+            print(f"Nearby search failed: {e}")
+            
+        return []
 
     def _get_mock_response(self, address):
         """
